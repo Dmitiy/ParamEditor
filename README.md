@@ -1,4 +1,4 @@
-# [ParamEditor](https://github.com/Dmitiy/ParamEditor.git)
+# [ParamEditor](https://dmitiy.github.io/ParamEditor/)
 
 - The `ParamEditor` component is a `React class component` designed to edit a `Model` structure by allowing users to set values for parameters (`Param[]`). It provides an interface for rendering all parameters for editing and ensures that the passed values are displayed in the editing form. The component supports only text-based parameters (`type: 'string'`).
 
