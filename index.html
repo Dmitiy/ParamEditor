@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ParamEditor</title>
+    <script src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@types/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/@types/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+
+        // Можно расширить interface Param['type'], 'string' | 'number' | 'select',
+        //  и параметр типа 'select' будет содержать список допустимых значений
+        interface Param {
+            id: number;
+            name: string;
+            type: string; // 'string' | 'number' | 'select'
+            // options?: string[]; // only for 'select' type
+        }
+
+        interface ParamValue {
+            paramId: number;
+            value: string;
+        }
+
+        interface Color {}
+
+        interface Model {
+            paramValues: ParamValue[];
+            colors: Color[];
+        }
+
+        interface Props {
+            params: Param[];
+            model: Model;
+        }
+
+        interface State {
+            paramValues: Record<number, string>;
+        }
+    </script>
+
+    <script type="text/babel">
+        class ParamEditor extends React.Component<Props, State> {
+            constructor(props: Props) {
+                super(props);
+
+                const paramValues: Record<number, string> = {};
+
+                props.params.forEach((param) => {
+                    const existing = props.model.paramValues.find(
+                        (v) => v.paramId === param.id
+                    );
+                    paramValues[param.id] = existing ? existing.value : '';
+                });
+
+                this.state = {
+                    paramValues,
+                };
+            }
+
+            handleChange = (paramId: number, value: string): void => {
+                this.setState((prevState) => ({
+                    paramValues: {
+                        ...prevState.paramValues,
+                        [paramId]: value,
+                    },
+                }));
+            };
+
+            getModel(): Model {
+                const paramValues: ParamValue[] = Object.entries(this.state.paramValues)
+                    .map(([paramId, value]) => ({
+                        paramId: Number(paramId),
+                        value,
+                    })
+                );
+
+                return {
+                    paramValues,
+                    colors: this.props.model.colors,
+                };
+            }
+
+            getParamValue(paramId: number): string {
+                return this.state.paramValues[paramId] || '';
+            }
+
+            // Теперь ты можешь легко добавлять новые типы
+            renderInput(param: Param) {
+                const value = this.getParamValue(param.id);
+
+                switch (param.type) {
+                    case 'string':
+                    // case 'number':
+                    return (
+                        <input
+                            type={param.type}
+                            value={value}
+                            onChange={(e) => this.handleChange(param.id, e.target.value)}
+                        />
+                    );
+                    // case 'select':
+                    // return (
+                    //     <select
+                    //         value={value}
+                    //         onChange={(e) => this.handleChange(param.id, e.target.value)}
+                    //     >
+                    //         <option value="">Выберите...</option>
+                    //         {param.options?.map((opt) => (
+                    //             <option key={opt} value={opt}>
+                    //                 {opt}
+                    //             </option>
+                    //         ))}
+                    //     </select>
+                    // );
+
+                    default:
+                        return <span>Неизвестный тип</span>;
+                }
+            }
+
+            render() {
+                const { params } = this.props;
+                const { paramValues } = this.state;
+
+                return (
+                    <form>
+                        {params.map((param) => (
+                            <div key={param.id} style={{ marginBottom: '10px' }}>
+                                <label htmlFor={`param-${param.id}`}>
+                                    <strong style={{ marginRight: '10px' }}>{param.name}:</strong>
+                                    {this.renderInput(param)}
+                                </label>
+                            </div>
+                        ))}
+                    </form>
+                );
+            }
+        }
+    </script>
+
+    <script type="text/babel">
+        const params: Param[] = [
+            { id: 1, name: 'Назначение', type: 'string' },
+            { id: 2, name: 'Длина', type: 'string' },
+        ];
+
+        const model: Model = {
+            paramValues: [{ paramId: 1, value: 'повседневное' }, { paramId: 2, value: 'макси' }],
+            colors: [],
+        };
+
+        class App extends React.Component {
+            render () {
+                return (
+                    <div style={{ margin: '0 auto', width: '320px', display: 'flex', flexDirection: 'column' }}>
+                        <h1>ParamEditor Example</h1>
+                        <ParamEditor params={params} model={model} />
+                    </div>
+                );
+            }
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+</html>
